@@ -209,43 +209,38 @@ class Weighter():
                 # If a weight, display the basic message
                 if type(entry) == float:
                     self.basic_message(user)
-                    
-                # If the message is a string hand off to the appropriate function
+
+                elif len(self.weights[self.weights['Name'] == user]) < 8:
+                    message = "\nAt least 8 days of data required for detailed analysis."
+                    self.slack.chat.post_message(channel='#weight_tracker', text = message, username = "Data Analyst", icon_emoji=":calendar:")
+
+                elif entry.lower() == 'summary':
+                    self.summary(user)
+
+                elif entry.lower() == 'percent':
+                    self.percentage_plot()
+
+                elif entry.lower() == 'history':
+                    self.history_plot(user)
+
+                elif entry.lower() == 'future':
+                    self.future_plot(user)
+
+                elif entry.lower() == 'analysis':
+                    self.analyze(user)
+
                 else:
-                    
-                    # Require at lesat 8 days of data
-                    if len(self.weights[self.weights['Name'] == user]) < 8:
-                        message = "\nAt least 8 days of data required for detailed analysis."
-                        self.slack.chat.post_message(channel='#weight_tracker', text = message, username = "Data Analyst", icon_emoji=":calendar:")
-                
-                    elif entry.lower() == 'summary':
-                        self.summary(user)
+                    message = ("\nPlease enter a valid message:\n\n"
+                               "Your weight\n"
+                               "'Summary' to see a personal summary\n"
+                               "'Percent' to see a plot of all users percentage changes\n"
+                               "'History' to see a plot of your personal history\n"
+                               "'Future' to see your predictions for the next thirty days\n"
+                               "'Analysis' to view personalized advice\n"
+                               "For more help, contact @koehrsen_will on Twitter.\n")
 
-                    elif entry.lower() == 'percent':
-                        self.percentage_plot()
-
-                    elif entry.lower() == 'history':
-                        self.history_plot(user)
-
-                    elif entry.lower() == 'future':
-                        self.future_plot(user)
-
-                    elif entry.lower() == 'analysis':
-                        self.analyze(user)
-    
-                    # Display a help message if the string is not valid
-                    else:
-                        message = ("\nPlease enter a valid message:\n\n"
-                                   "Your weight\n"
-                                   "'Summary' to see a personal summary\n"
-                                   "'Percent' to see a plot of all users percentage changes\n"
-                                   "'History' to see a plot of your personal history\n"
-                                   "'Future' to see your predictions for the next thirty days\n"
-                                   "'Analysis' to view personalized advice\n"
-                                   "For more help, contact @koehrsen_will on Twitter.\n")
-
-                        self.slack.chat.post_message(channel='#weight_tracker', text = message, username = "Help", 
-                        	icon_emoji=":interrobang:")
+                    self.slack.chat.post_message(channel='#weight_tracker', text = message, username = "Help", 
+                    	icon_emoji=":interrobang:")
                     
             
     """ 
@@ -325,18 +320,17 @@ class Weighter():
     def percentage_plot(self):
         
         self.reset_plot()
-        
+
         plt.style.use('fivethirtyeight')
         plt.figure(figsize=(10,8))
 
-        for i, user in enumerate(self.users):
-            
+        for user in self.users:
             user_color = self.user_dict[user]['color']
 
             # Select the user and order dataframe by date
             df = self.weights[self.weights['Name'] == user]
             df.sort_index(inplace=True)
-            
+
             # List is used for fitting polynomial
             xvalues = list(range(len(df)))
 
@@ -350,19 +344,33 @@ class Weighter():
             fit_data = p(xvalues)
 
             # Plot the actual points and the fit
-            plt.plot(df.index, df['pct_change'], 'o', color = user_color, label = '%s Observations' % user)
-            plt.plot(df.index, fit_data, '-', color = user_color, linewidth = 5, label = '%s Smooth Fit' % user)
+            plt.plot(
+                df.index,
+                df['pct_change'],
+                'o',
+                color=user_color,
+                label=f'{user} Observations',
+            )
+            plt.plot(
+                df.index,
+                fit_data,
+                '-',
+                color=user_color,
+                linewidth=5,
+                label=f'{user} Smooth Fit',
+            )
 
 
         # Plot formatting
-        plt.xlabel('Date'); plt.ylabel('% Change from Start')
+        plt.xlabel('Date')
+        plt.ylabel('% Change from Start')
         plt.title('Percentage Changes')
         plt.grid(color='k', alpha=0.4)
         plt.legend(prop={'size':14})
         plt.savefig('C:\\Users\\Will Koehrsen\\Documents\\Data-Analysis\\weighter\\images\\percentage_plot.png')
-        
+
         self.slack.files.upload('C:\\Users\\Will Koehrsen\\Documents\\Data-Analysis\\weighter\\images\\percentage_plot.png', channels='#weight_tracker', title="Percent Plot")
-        
+
         os.remove('C:\\Users\\Will Koehrsen\\Documents\\Data-Analysis\\weighter\\images\\percentage_plot.png')
         
     """ 
@@ -374,11 +382,11 @@ class Weighter():
         self.reset_plot()
         plt.style.use('fivethirtyeight')
         plt.figure(figsize=(10, 8))
-        
+
         df = self.weights[self.weights['Name'] == user]
-        df.sort_index(inplace=True) 
+        df.sort_index(inplace=True)
         user_color = self.user_dict[user]['color']
-        
+
         # List is used for fitting polynomial
         xvalues = list(range(len(df)))
 
@@ -394,12 +402,18 @@ class Weighter():
         # Make a simple plot and upload to slack
         plt.plot(df.index, df['Entry'], 'ko', ms = 8, label = 'Observed')
         plt.plot(df.index, fit_data, '-', color = user_color, linewidth = 5, label = 'Smooth Fit')
-        plt.xlabel('Date'); plt.ylabel('Weight (lbs)'); plt.title('%s Weight History' % user)
+        plt.xlabel('Date')
+        plt.ylabel('Weight (lbs)')
+        plt.title(f'{user} Weight History')
         plt.legend(prop={'size': 14});
-        
+
         plt.savefig(fname='C:\\Users\\Will Koehrsen\\Documents\\Data-Analysis\\weighter\\images\\history_plot.png')
-        self.slack.files.upload('C:\\Users\\Will Koehrsen\\Documents\\Data-Analysis\\weighter\\images\\history_plot.png', channels='#weight_tracker', title="%s History" % user)
-        
+        self.slack.files.upload(
+            'C:\\Users\\Will Koehrsen\\Documents\\Data-Analysis\\weighter\\images\\history_plot.png',
+            channels='#weight_tracker',
+            title=f"{user} History",
+        )
+
         # Remove the plot from local storage
         os.remove('C:\\Users\\Will Koehrsen\\Documents\\Data-Analysis\\weighter\\images\\history_plot.png')
    
@@ -409,8 +423,7 @@ class Weighter():
     """
     
     def prophet_model(self):
-        model = fbprophet.Prophet(daily_seasonality=False, yearly_seasonality=False)
-        return model
+        return fbprophet.Prophet(daily_seasonality=False, yearly_seasonality=False)
         
     """ 
     Plot the prophet forecast for the next thirty days
@@ -418,42 +431,48 @@ class Weighter():
     """
     def future_plot(self, user):
         self.reset_plot()
-        
+
         df = self.weights[self.weights['Name'] == user]
         dates = [date.date() for date in df.index]
         df['ds'] = dates
         df['y'] = df['Entry']
-        
+
         df.sort_index(inplace=True)
 
         # Prophet model
         model = self.prophet_model()
         model.fit(df)
-        
+
         # Future dataframe for predictions
         future = model.make_future_dataframe(periods=30, freq='D')
         future = model.predict(future)
-    
+
         color = self.user_dict[user]['color']
-        
+
         # Write a message and post to slack
         message = ('{} Your predicted weight on {} = {:.2f} lbs.'.format(
             user, max(future['ds']).date(), future.ix[len(future) - 1, 'yhat']))
-        
+
         self.slack.chat.post_message(channel="#weight_tracker", text=message, username = 'The Future', icon_emoji=":city_sunrise:")
-        
+
         # Create the plot and upload to slack
         fig, ax = plt.subplots(1, 1, figsize=(10, 8))
         ax.plot(df['ds'], df['y'], 'o', color = 'k', ms = 8, label = 'observations')
         ax.plot(future['ds'], future['yhat'], '-', color = color, label = 'modeled')
         ax.fill_between(future['ds'].dt.to_pydatetime(), future['yhat_upper'], future['yhat_lower'], facecolor = color, 
                 alpha = 0.4, edgecolor = 'k', linewidth  = 1.8, label = 'confidence interval')
-        plt.xlabel('Date'); plt.ylabel('Weight (lbs)'); plt.title('%s 30 Day Prediction' % user)
+        plt.xlabel('Date')
+        plt.ylabel('Weight (lbs)')
+        plt.title(f'{user} 30 Day Prediction')
         plt.legend()
         plt.savefig('C:\\Users\\Will Koehrsen\\Documents\\Data-Analysis\\weighter\\images\\future_plot.png')
-        
-        self.slack.files.upload('C:\\Users\\Will Koehrsen\\Documents\\Data-Analysis\\weighter\\images\\future_plot.png', channels="#weight_tracker", title="%s Future Predictions" % user)
-        
+
+        self.slack.files.upload(
+            'C:\\Users\\Will Koehrsen\\Documents\\Data-Analysis\\weighter\\images\\future_plot.png',
+            channels="#weight_tracker",
+            title=f"{user} Future Predictions",
+        )
+
         os.remove('C:\\Users\\Will Koehrsen\\Documents\\Data-Analysis\\weighter\\images\\future_plot.png')
         
     """ 
@@ -464,7 +483,7 @@ class Weighter():
     def analyze(self, user):
         
         self.reset_plot()
-        
+
         # Get user info and sort dataframe by date
         info = self.user_dict.get(user)
         goal_weight = info['goal_weight']
@@ -472,24 +491,24 @@ class Weighter():
         df = df.sort_index()
         df['ds'] = [date.date() for date in df.index]
         df['y'] = df['Entry']
-        
+
         model = self.prophet_model()
         model.fit(df)
-        
+
         prediction_days = 2 * len(df)
-        
+
         future = model.make_future_dataframe(periods = prediction_days, freq = 'D')
         future = model.predict(future)
-        
+
         # lbs change per day 
         change_per_day = info['abs_change'] / (max(df['ds']) - min(df['ds'])).days
-        
+
         days_to_goal = abs(int((info['recent'] - goal_weight) / change_per_day))
         date_for_goal = max(df['ds']) + pd.DateOffset(days=days_to_goal)
-        
+
         # future dataframe where the user in above goal
         goal_future = future[future['yhat'] < goal_weight]
-        
+
         # The additive model predicts the user will meet their goal
         if len(goal_future) > 0:
             model_goal_date = min(goal_future['ds'])
@@ -497,7 +516,7 @@ class Weighter():
                        "Extrapolating the average loss per day, you will reach your goal of {} lbs in {} days on {}.\n\n"
                        "The additive model predicts you will reach your goal on {}\n".format(
                        user, change_per_day, goal_weight, days_to_goal, date_for_goal.date(), model_goal_date.date()))
-        
+
         # The additive model does not predict the user will meet their goal
         else:
             final_future_date = max(future['ds'])
@@ -505,21 +524,21 @@ class Weighter():
                        "Extrapolating the average loss per day, you will reach your goal of {} lbs in {} days on {}.\n\n"
                        "The additive model does not forecast you reaching your goal by {}.\n".format(
                            user, change_per_day, goal_weight, days_to_goal, date_for_goal.date(), final_future_date))
-        
-        
-        
+
+
+
         self.slack.chat.post_message(channel="#weight_tracker", text=message, username="Analysis", icon_emoji=":bar_chart:")
 
         # Identify Weekly Trends
         future['weekday'] = [date.weekday() for date in future['ds']]
         future_weekly = future.groupby('weekday').mean()
         future_weekly.index = ['Mon', 'Tues', 'Wed', 'Thurs', 'Fri', 'Sat', 'Sun']
-        
+
         # Color labels based on the users objective
         colors = ['red' if ( ((weight > 0) & (info['objective'] == 'lose')) | ((weight < 0) & (info['objective'] == 'gain'))) else 'green' for weight in future_weekly['weekly']]
 
         self.reset_plot()
-        
+
         # Create a bar plot with labels for positive and negative changes
         plt.figure(figsize=(10, 8))
         xvalues = list(range(len(future_weekly)))
@@ -530,11 +549,15 @@ class Weighter():
         plt.legend(handles=[red_patch, green_patch])
         plt.xlabel('Day of Week')
         plt.ylabel('Trend (lbs)')
-        plt.title('%s Weekly Trends' % user)
+        plt.title(f'{user} Weekly Trends')
         plt.savefig('C:\\Users\\Will Koehrsen\\Documents\\Data-Analysis\\weighter\\images\\weekly_plot.png')
-        
+
         # Upload the image to slack and delete local file
-        self.slack.files.upload('C:\\Users\\Will Koehrsen\\Documents\\Data-Analysis\\weighter\\images\\weekly_plot.png', channels = '#weight_tracker', title="%s Weekly Trends" % user)
+        self.slack.files.upload(
+            'C:\\Users\\Will Koehrsen\\Documents\\Data-Analysis\\weighter\\images\\weekly_plot.png',
+            channels='#weight_tracker',
+            title=f"{user} Weekly Trends",
+        )
 
         os.remove('C:\\Users\\Will Koehrsen\\Documents\\Data-Analysis\\weighter\\images\\weekly_plot.png')
 

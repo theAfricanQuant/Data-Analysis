@@ -49,16 +49,16 @@ def submit_assignment(file_tup):
 
 	# Get the name of the folder
 	folder = file_tup[0]
-	    
+
 	# Class to select depends on folder
-	if folder == 'DSCI451':
-	    class_select = driver.find_element_by_link_text('Applied Data Science Research (100/5047)')
-	elif folder == 'DCSI453':
-	    class_select = driver.find_element_by_link_text('Data Science: Statistical Learning, Modeling and Prediction (100/5046)')
+	if folder == 'DCSI453':
+		class_select = driver.find_element_by_link_text('Data Science: Statistical Learning, Modeling and Prediction (100/5046)')
+	elif folder == 'DSCI451':
+		class_select = driver.find_element_by_link_text('Applied Data Science Research (100/5047)')
 	elif folder == 'EECS491':
-	    class_select = driver.find_element_by_link_text('Artificial Intelligence: Probabilistic Graphical Models (100/10039)')
+		class_select = driver.find_element_by_link_text('Artificial Intelligence: Probabilistic Graphical Models (100/10039)')
 	elif folder == 'EECS531':
-	    class_select = driver.find_element_by_link_text('Computer Vision (100/10040)')
+		class_select = driver.find_element_by_link_text('Computer Vision (100/10040)')
 
 	# Click on the specific class
 	class_select.click()
@@ -72,7 +72,7 @@ def submit_assignment(file_tup):
 	# Locate the specific assignment
 	file_name = file_tup[1]
 	file_locator = file_name.split('.')[0]
-	 
+
 	specific_assigment = driver.find_element_by_link_text(file_locator)
 	specific_assigment.click()
 
@@ -105,15 +105,16 @@ def submit_assignment(file_tup):
 	# Move the file to the submitted folder
 	submitted_dir = 'C:/Users/Will Koehrsen/Desktop/submitted_assignments'
 	submitted_dir = os.path.join(submitted_dir, folder)
-	submitted_file_name = 'Submitted ' + file_name
+	submitted_file_name = f'Submitted {file_name}'
 
 	submitted_file_location = os.path.join(submitted_dir, submitted_file_name)
 	# os.rename(file_location, submitted_file_location)
 
-	print('{} Assignment for Class {} successfully submitted at {}.'.format(
-		file_name, folder, datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
+	print(
+		f"{file_name} Assignment for Class {folder} successfully submitted at {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}."
+	)
 
-	print('Submitted assignment available at {}.'.format(submitted_file_location))
+	print(f'Submitted assignment available at {submitted_file_location}.')
 
 	return
 
@@ -124,15 +125,14 @@ if __name__ == "__main__":
 	dir_list = list(os.listdir(submission_dir))
 
 	for directory in dir_list:
-	    file_list = list(os.listdir(os.path.join(submission_dir, directory)))
-	    if len(file_list) != 0:
-	        file_tup = (directory, file_list[0])
+		if file_list := list(os.listdir(os.path.join(submission_dir, directory))):
+			file_tup = (directory, file_list[0])
 
 	if len(file_tup) == 0:
 		print('No files to submit')
 
 	else:
-		print('Assignment "{}" for "{}" found.'.format(file_tup[1], file_tup[0]))
+		print(f'Assignment "{file_tup[1]}" for "{file_tup[0]}" found.')
 		input('Press enter to proceed: ')
 		submit_assignment(file_tup)
 

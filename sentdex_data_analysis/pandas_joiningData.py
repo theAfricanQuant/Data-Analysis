@@ -12,8 +12,7 @@ def mortgage_30yr():
 	df = quandl.get('FMAC/MORTG')
 	df = df[df.index > "1974-12-01"]
 	df = (df['Value'] - df['Value'][0]) / df['Value'][0] * 100
-	df = df.resample('M').mean()
-	return df 
+	return df.resample('M').mean() 
 
 
 ax1 = plt.subplot(2,1,1)
