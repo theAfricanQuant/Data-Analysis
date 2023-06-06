@@ -17,18 +17,13 @@ def initial_state_data():
 	main_df = pd.DataFrame()
 
 	for abbv in states:
-		query = 'FMAC/HPI_' + str(abbv)
+		query = f'FMAC/HPI_{str(abbv)}'
 		df = quandl.get(query, authtoken=api_key)
 		df.columns = [str(abbv)]
 		df[abbv] = (df[abbv] - df[abbv][0]) / df[abbv][0] * 100.0
-		if main_df.empty:
-			main_df = df
-		else:
-			main_df = main_df.join(df)
-
-	pickle_out = open('fifty_states_pct.pickle', 'wb')
-	pickle.dump(main_df, pickle_out)
-	pickle_out.close()
+		main_df = df if main_df.empty else main_df.join(df)
+	with open('fifty_states_pct.pickle', 'wb') as pickle_out:
+		pickle.dump(main_df, pickle_out)
 
 # initial_state_data()
 

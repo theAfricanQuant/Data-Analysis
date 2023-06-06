@@ -16,10 +16,7 @@ ax1 = plt.subplot(2,1,1)
 ax2 = plt.subplot(2,1,2, sharex=ax1)
 
 def create_labels(cur_hpi, fut_hpi):
-    if fut_hpi > cur_hpi:
-        return 1
-    else:
-        return 0
+    return 1 if fut_hpi > cur_hpi else 0
 
 def moving_average(values):
     return mean(values)
@@ -53,14 +50,14 @@ X_train, x_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
 clflog_accuracy = []
 clfsvm_accuracy = []
 
-for i in range(10):
-	clflog = LogisticRegression(C=49.0, dual=False, penalty="l1")
-	clflog.fit(X_train, y_train)
-	clflog_accuracy.append(clflog.score(x_test,y_test))
+for _ in range(10):
+    clflog = LogisticRegression(C=49.0, dual=False, penalty="l1")
+    clflog.fit(X_train, y_train)
+    clflog_accuracy.append(clflog.score(x_test,y_test))
 
-	clfsvm = svm.SVC(kernel='linear')
-	clfsvm.fit(X_train, y_train)
-	clfsvm_accuracy.append(clfsvm.score(x_test,y_test))
+    clfsvm = svm.SVC(kernel='linear')
+    clfsvm.fit(X_train, y_train)
+    clfsvm_accuracy.append(clfsvm.score(x_test,y_test))
 
 print('Accuracy of logistic regression = %0.4f' % (mean(clflog_accuracy) * 100))
 print('Accuracy of support vector machine = %0.4f' % (mean(clfsvm_accuracy) * 100))

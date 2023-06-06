@@ -17,10 +17,7 @@ housing_pct['US_HPI_future'] = housing_pct['United States'].shift(-1)
 housing_pct.dropna(inplace=True)
 
 def create_labels(cur_hpi, fut_hpi):
-    if fut_hpi > cur_hpi:
-        return 1
-    else:
-        return 0
+    return 1 if fut_hpi > cur_hpi else 0
 
 housing_pct['label'] = list(map(create_labels, housing_pct['United States'], housing_pct['US_HPI_future']))
 

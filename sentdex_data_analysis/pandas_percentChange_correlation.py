@@ -17,30 +17,24 @@ def initial_state_data():
 	main_df = pd.DataFrame()
 
 	for abbv in states:
-		query = 'FMAC/HPI_' + str(abbv)
+		query = f'FMAC/HPI_{str(abbv)}'
 		df = quandl.get(query, authtoken=api_key)
 		df.columns = [str(abbv)]
 		df[abbv] = (df[abbv] - df[abbv][0]) / df[abbv][0] * 100.0
-		if main_df.empty:
-			main_df = df
-		else:
-			main_df = main_df.join(df)
-
+		main_df = df if main_df.empty else main_df.join(df)
 	print(main_df.head())
 
-	pickle_out = open('fifty_states_pct.pickle', 'wb')
-	pickle.dump(main_df, pickle_out)
-	pickle_out.close()
+	with open('fifty_states_pct.pickle', 'wb') as pickle_out:
+		pickle.dump(main_df, pickle_out)
 
 
 
 def HPI_Benchmark():
 	df = quandl.get('FMAC/HPI_USA' , authtoken=api_key)
 	df['United States'] = (df['Value'] - df['Value'][0]) / df['Value'][0] * 100.0
-	
-	pickle_out = open('us_pct.pickle', 'wb')
-	pickle.dump(df, pickle_out)
-	pickle_out.close()
+
+	with open('us_pct.pickle', 'wb') as pickle_out:
+		pickle.dump(df, pickle_out)
 
 fig = plt.figure()
 ax1 = plt.subplot2grid((1,1), (0,0))

@@ -12,10 +12,7 @@ ax1 = plt.subplot(2,1,1)
 ax2 = plt.subplot(2,1,2, sharex=ax1)
 
 def create_labels(cur_hpi, fut_hpi):
-    if fut_hpi > cur_hpi:
-        return 1
-    else:
-        return 0
+    return 1 if fut_hpi > cur_hpi else 0
 
 def moving_average(values):
     return mean(values)
